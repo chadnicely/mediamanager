@@ -1,0 +1,36 @@
+{
+  "manifest_version": 3,
+  "name": "Jotter Capture",
+  "version": "1.0.0",
+  "description": "Capture the visible tab, a full page, or a region and save it straight into Jotter's Shots.",
+  "permissions": ["activeTab", "scripting", "storage", "notifications", "downloads", "debugger", "offscreen"],
+  "host_permissions": ["http://127.0.0.1:47600/*"],
+  "background": { "service_worker": "background.js" },
+  "icons": { "128": "icon.png" },
+  "action": {
+    "default_title": "Jotter Capture",
+    "default_popup": "popup.html",
+    "default_icon": { "128": "icon.png" }
+  },
+  "web_accessible_resources": [
+    { "resources": ["shutter.wav"], "matches": ["<all_urls>"] }
+  ],
+  "commands": {
+    "capture-visible": {
+      "suggested_key": { "default": "Ctrl+Shift+1" },
+      "description": "Capture visible area"
+    },
+    "capture-full": {
+      "suggested_key": { "default": "Ctrl+Shift+2" },
+      "description": "Capture full page"
+    },
+    "capture-region": {
+      "suggested_key": { "default": "Ctrl+Shift+3" },
+      "description": "Select an area to capture"
+    },
+    "open-bar": {
+      "suggested_key": { "default": "Ctrl+Shift+4" },
+      "description": "Open the Jotter capture bar"
+    }
+  }
+}

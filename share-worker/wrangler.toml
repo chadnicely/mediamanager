@@ -1,0 +1,8 @@
+name = "jotter-share"
+main = "worker.js"
+compatibility_date = "2024-09-01"
+
+# Bind your R2 bucket. Change bucket_name to the bucket you just created.
+[[r2_buckets]]
+binding = "BUCKET"
+bucket_name = "shotshosted"
