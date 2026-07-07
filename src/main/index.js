@@ -2,8 +2,45 @@ import { app, shell, BrowserWindow, ipcMain, dialog, desktopCapturer, screen, pr
 import { join, extname, basename, normalize } from 'path'
 import { readFile, writeFile, mkdir, readdir, stat } from 'fs/promises'
 import { createHash } from 'crypto'
+import { spawn } from 'child_process'
+import net from 'net'
 import * as storage from './storage.js'
 import { startReceiver } from './receiver.js'
+
+// The login/accounts API lives in server/ and normally has to be started by
+// hand in a second terminal. In dev we launch it automatically so opening
+// Jotter is all it takes. Packaged builds skip this and talk to the hosted API.
+let authServerProc = null
+
+function portInUse(port) {
+  return new Promise((resolve) => {
+    const sock = net.connect(port, '127.0.0.1')
+    sock.setTimeout(500)
+    sock.on('connect', () => { sock.destroy(); resolve(true) })
+    sock.on('error', () => resolve(false))
+    sock.on('timeout', () => { sock.destroy(); resolve(false) })
+  })
+}
+
+async function startAuthServer() {
+  if (app.isPackaged) return // distributed builds use the hosted API, not a local server
+  const port = Number(process.env.JOTTER_API_PORT) || 4500
+  if (await portInUse(port)) {
+    console.log(`[auth] server already running on :${port}`)
+    return
+  }
+  const serverDir = join(__dirname, '../../server')
+  authServerProc = spawn(process.execPath, [join(serverDir, 'index.js')], {
+    cwd: serverDir,
+    env: { ...process.env, ELECTRON_RUN_AS_NODE: '1' },
+    stdio: 'inherit'
+  })
+  authServerProc.on('exit', (code) => {
+    console.log(`[auth] server exited (${code})`)
+    authServerProc = null
+  })
+  console.log('[auth] starting local auth server…')
+}
 
 let mainWindow = null
 
@@ -12,7 +49,14 @@ let mainWindow = null
 protocol.registerSchemesAsPrivileged([
   {
     scheme: 'jotter-media',
-    privileges: { standard: true, secure: true, supportFetchAPI: true, bypassCSP: true, stream: true }
+    privileges: {
+      standard: true,
+      secure: true,
+      supportFetchAPI: true,
+      bypassCSP: true,
+      stream: true,
+      corsEnabled: true
+    }
   }
 ])
 
@@ -318,13 +362,19 @@ app.whenReady().then(() => {
         const thumb = await getThumb(p, t)
         if (thumb) {
           return new Response(thumb, {
-            headers: { 'content-type': 'image/jpeg', 'cache-control': 'max-age=31536000' }
+            headers: {
+              'content-type': 'image/jpeg',
+              'cache-control': 'max-age=31536000',
+              'access-control-allow-origin': '*'
+            }
           })
         }
         // fall through to the original file for formats we can't resize
       }
       const data = await readFile(p)
-      return new Response(data, { headers: { 'content-type': mimeFromPath(p) } })
+      return new Response(data, {
+        headers: { 'content-type': mimeFromPath(p), 'access-control-allow-origin': '*' }
+      })
     } catch {
       return new Response('Not found', { status: 404 })
     }
@@ -966,6 +1016,7 @@ app.whenReady().then(() => {
     }, 900)
   }
 
+  startAuthServer()
   createWindow()
 
   app.on('activate', () => {
@@ -975,6 +1026,7 @@ app.whenReady().then(() => {
 
 app.on('will-quit', () => {
   globalShortcut.unregisterAll()
+  if (authServerProc) authServerProc.kill()
 })
 
 app.on('window-all-closed', () => {

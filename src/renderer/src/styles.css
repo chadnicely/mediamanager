@@ -1664,6 +1664,100 @@ mark {
   background: linear-gradient(90deg, #eceef1, #f6f7f9, #eceef1);
 }
 
+/* Video thumbnail = a real <video> element showing a seeked frame */
+.video-tile video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  background: #000;
+  pointer-events: none;
+}
+
+/* Loading placeholder for a video thumbnail while its frame decodes, so tiles
+   never sit as empty black boxes. The frame fades in once it's painted. */
+.vthumb-skel {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  background: linear-gradient(90deg, #e6e8eb 25%, #f3f4f6 37%, #e6e8eb 63%);
+  background-size: 400% 100%;
+  animation: vthumb-shimmer 1.4s ease infinite;
+}
+
+@keyframes vthumb-shimmer {
+  0% { background-position: 100% 0; }
+  100% { background-position: 0 0; }
+}
+
+/* Play badge overlaid on video thumbnails in the grid */
+.video-tile .video-badge {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(10, 14, 22, 0.55);
+  color: #fff;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-left: 3px;
+  pointer-events: none;
+  transition: background 0.15s ease;
+}
+
+.video-tile:hover .video-badge {
+  background: var(--blue);
+}
+
+/* Duration pill in the corner of the thumbnail (YouTube-style) */
+.video-tile .video-duration {
+  position: absolute;
+  bottom: 6px;
+  right: 6px;
+  background: rgba(10, 14, 22, 0.82);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1;
+  padding: 3px 6px;
+  border-radius: 4px;
+  pointer-events: none;
+}
+
+/* Card wrapping a video thumbnail + its caption (name, size, date) */
+.video-card {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.video-caption {
+  padding: 0 2px;
+  min-width: 0;
+}
+
+.video-name {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.video-meta {
+  font-size: 11px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 /* ---------- Lightbox ---------- */
 .lightbox {
   position: fixed;
@@ -1693,6 +1787,14 @@ mark {
   object-fit: contain;
   border-radius: 4px;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+}
+
+.lb-figure video {
+  max-width: 100%;
+  max-height: 82vh;
+  border-radius: 4px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+  background: #000;
 }
 
 .lb-figure figcaption {
@@ -2871,6 +2973,7 @@ mark {
   opacity: 1;
 }
 .dup-card-thumb {
+  position: relative;
   height: 150px;
   background: #eceef1;
   display: grid;
@@ -3175,6 +3278,7 @@ mark {
 }
 
 .scan-tile-thumb {
+  position: relative;
   flex: 1 1 auto;
   min-height: 0;
   background: #eceef1;
@@ -3189,6 +3293,15 @@ mark {
   height: 100%;
   object-fit: cover;
   display: block;
+}
+
+.scan-tile-thumb video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  background: #000;
+  pointer-events: none;
 }
 
 .scan-tile-check {
@@ -3446,7 +3559,8 @@ mark {
   overflow: hidden;
 }
 
-.preview-media img {
+.preview-media img,
+.preview-media video {
   max-width: 100%;
   max-height: 100%;
   object-fit: contain;

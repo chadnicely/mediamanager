@@ -1,5 +1,7 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import LibrarySetup from './LibrarySetup.jsx'
+import VideoThumb from './VideoThumb.jsx'
+import { getVideoThumb, getVideoHash } from '../lib/videoThumbs.js'
 import { getGroups, addGroup, safeName } from '../lib/groups.js'
 import { showPrompt } from '../lib/prompt.js'
 import { CATEGORIES, CATEGORY_META } from '../lib/fileTypes.js'
@@ -17,6 +19,9 @@ function iconFor(ext) {
 }
 function isImage(ext) {
   return CATEGORIES.Image.includes(ext)
+}
+function isVideo(ext) {
+  return CATEGORIES.Video.includes(ext)
 }
 function mediaUrl(path) {
   return `jotter-media://f/?p=${encodeURIComponent(path)}`
@@ -229,6 +234,8 @@ const ThumbTile = memo(function ThumbTile({ f, selected, isPicked, onSelect, onM
       <div className="scan-tile-thumb">
         {isImage(f.ext) ? (
           <img src={thumbUrl(f.path, 320)} alt="" loading="lazy" decoding="async" />
+        ) : isVideo(f.ext) ? (
+          <VideoThumb src={mediaUrl(f.path)} />
         ) : (
           <span className="result-ico">{iconFor(f.ext)}</span>
         )}
@@ -267,12 +274,14 @@ export default function ScanImport({
   const [dest, setDest] = useState(prefix)
   const [mode, setMode] = useState('copy') // 'copy' | 'move'
   const [roots, setRoots] = useState([])
-  const [exts, setExts] = useState(() => {
-    const s = new Set()
-    defaultCategories.forEach((c) => CATEGORIES[c]?.forEach((e) => s.add(e)))
-    return s
-  })
+  // Start with nothing selected — the type pills open unchecked in every area
+  // (Images, Videos, Files…). The user picks what to find before scanning.
+  const [exts, setExts] = useState(() => new Set())
   const [scanning, setScanning] = useState(false)
+  const [preparing, setPreparing] = useState(false) // gathering thumbnails before showing
+  const [prepDone, setPrepDone] = useState(0)
+  const [prepTotal, setPrepTotal] = useState(0)
+  const skipPrepRef = useRef(null) // lets the user reveal results without waiting for the rest
   const [scanCount, setScanCount] = useState(0) // files found so far during a scan
   const [deletedCount, setDeletedCount] = useState(0) // files sent to Recycle Bin this session
   const [results, setResults] = useState([])
@@ -287,8 +296,11 @@ export default function ScanImport({
   const [groups, setGroups] = useState(() => getGroups(area))
   const [phase, setPhase] = useState('setup') // 'setup' | 'results'
   const [step, setStep] = useState(1) // setup wizard step: 1 = location, 2 = types
-  // Images default to the gallery (thumbnail) view; everything else to the list.
-  const [view, setView] = useState(() => (defaultCategories.includes('Image') ? 'thumb' : 'list'))
+  // Images and videos default to the gallery (thumbnail) view; other file types
+  // to the list.
+  const [view, setView] = useState(() =>
+    defaultCategories.some((c) => c === 'Image' || c === 'Video') ? 'thumb' : 'list'
+  )
   const [dupMode, setDupMode] = useState('off') // 'off' | 'name' | 'image'
   const [hashes, setHashes] = useState({}) // path -> perceptual hash
   const [hashing, setHashing] = useState(null) // { done, total } while fingerprinting
@@ -513,6 +525,33 @@ export default function ScanImport({
     if (picks?.length) setRoots((prev) => [...new Set([...prev, ...picks])])
   }
 
+  // Gather video thumbnails up front — before revealing results — so the grid
+  // opens already populated instead of as empty boxes. Shows live progress and
+  // an escape hatch; a generous time cap keeps it from ever hanging.
+  async function prewarmThumbs(files) {
+    const vids = files.filter((f) => isVideo(f.ext))
+    if (!vids.length) return
+    setPreparing(true)
+    setPrepTotal(vids.length)
+    setPrepDone(0)
+    let done = 0
+    const work = Promise.all(
+      vids.map((f) =>
+        getVideoThumb(mediaUrl(f.path)).finally(() => {
+          done++
+          setPrepDone(done)
+        })
+      )
+    )
+    const cap = new Promise((r) => setTimeout(r, 90000))
+    const skip = new Promise((r) => {
+      skipPrepRef.current = r
+    })
+    await Promise.race([work, cap, skip])
+    skipPrepRef.current = null
+    setPreparing(false)
+  }
+
   async function scan() {
     setError('')
     if (!roots.length) return setError('Add at least one folder to scan.')
@@ -528,13 +567,21 @@ export default function ScanImport({
       setTruncated(res.truncated)
       setPicked(new Set()) // nothing checked by default
       setSel(res.files[0]?.path || null)
-      if (res.files.length) setPhase('results')
-      else setError('No matching files found in those folders.')
+      if (res.files.length) {
+        // Take a moment to pre-build the first page of video thumbnails so the
+        // results open ready instead of as a wall of empty boxes.
+        setScanning(false)
+        await prewarmThumbs(res.files)
+        setPhase('results')
+      } else {
+        setError('No matching files found in those folders.')
+      }
     } catch (e) {
       setError(e?.message || 'Scan failed.')
     } finally {
       off?.()
       setScanning(false)
+      setPreparing(false)
     }
   }
 
@@ -599,11 +646,12 @@ export default function ScanImport({
     return q ? results.filter((f) => f.name.toLowerCase().includes(q)) : results
   }, [results, resultQuery, dupClusters])
 
-  // When "by image" is on, fingerprint every image once (cached on disk), with
-  // progress. Hashes accumulate into state so clusters form as it goes.
+  // When "by image" is on, fingerprint every image and video once, with
+  // progress. Images hash in the main process; videos hash from their decoded
+  // frame. Hashes accumulate into state so clusters form as it goes.
   useEffect(() => {
     if (dupMode !== 'image' || phase !== 'results') return
-    const todo = results.filter((f) => isImage(f.ext) && !hashes[f.path])
+    const todo = results.filter((f) => (isImage(f.ext) || isVideo(f.ext)) && !hashes[f.path])
     if (!todo.length) {
       setHashing(null)
       return
@@ -614,7 +662,9 @@ export default function ScanImport({
       const acc = {}
       for (let i = 0; i < todo.length; i++) {
         if (cancelled) return
-        const h = await window.api.imageHash(todo[i].path)
+        const h = isVideo(todo[i].ext)
+          ? await getVideoHash(mediaUrl(todo[i].path))
+          : await window.api.imageHash(todo[i].path)
         if (h) acc[todo[i].path] = h
         if (i % 20 === 0 || i === todo.length - 1) {
           setHashes((prev) => ({ ...prev, ...acc }))
@@ -785,17 +835,42 @@ export default function ScanImport({
         {!libReady ? (
           /* Must choose a location before anything else. */
           <LibrarySetup area={area} label={areaLabel} onReady={refreshLib} />
-        ) : scanning ? (
+        ) : scanning || preparing ? (
           <div className="scan-loading">
-            <div className="scan-loading-icon">🔎</div>
+            <div className="scan-loading-icon">{preparing ? '🎬' : '🔎'}</div>
             <div className="scan-loading-title">
-              Searching {defaultCategories[0] === 'Image' ? 'images' : 'files'}…
+              {preparing
+                ? 'Gathering video thumbnails…'
+                : `Searching ${defaultCategories[0] === 'Image' ? 'images' : 'files'}…`}
             </div>
-            <div className="scan-loading-count">{scanCount.toLocaleString()} found</div>
+            <div className="scan-loading-count">
+              {preparing
+                ? `${prepDone} of ${prepTotal} ready`
+                : `${scanCount.toLocaleString()} found`}
+            </div>
             <div className="scan-loading-bar">
-              <div className="scan-loading-bar-fill" />
+              <div
+                className="scan-loading-bar-fill"
+                style={
+                  preparing
+                    ? {
+                        width: `${prepTotal ? Math.round((prepDone / prepTotal) * 100) : 0}%`,
+                        animation: 'none'
+                      }
+                    : undefined
+                }
+              />
             </div>
-            <div className="scan-loading-sub">Looking through your folders — hang tight.</div>
+            <div className="scan-loading-sub">
+              {preparing
+                ? 'Building the thumbnails first so your results open ready, not blank.'
+                : 'Looking through your folders — hang tight.'}
+            </div>
+            {preparing && (
+              <button className="link-btn" onClick={() => skipPrepRef.current?.()}>
+                Show results now →
+              </button>
+            )}
           </div>
         ) : phase === 'setup' ? (
           <>
@@ -988,10 +1063,10 @@ export default function ScanImport({
                     <div className="dup-progress">
                       <div className="dup-spinner" />
                       <div className="dup-progress-text">
-                        Fingerprinting images… {hashing.done} / {hashing.total}
+                        Fingerprinting… {hashing.done} / {hashing.total}
                       </div>
                       <div className="dup-progress-sub">
-                        Duplicates appear once every image has been analyzed — so nothing is matched
+                        Duplicates appear once everything has been analyzed — so nothing is matched
                         or deleted on a partial scan.
                       </div>
                       <div className="dup-bar">
@@ -1064,6 +1139,8 @@ export default function ScanImport({
                           <div className="dup-card-thumb">
                             {isImage(f.ext) ? (
                               <img src={thumbUrl(f.path, 320)} alt="" loading="lazy" />
+                            ) : isVideo(f.ext) ? (
+                              <VideoThumb src={mediaUrl(f.path)} />
                             ) : (
                               <span className="result-ico">{iconFor(f.ext)}</span>
                             )}
@@ -1214,6 +1291,8 @@ export default function ScanImport({
                               <div className="preview-media">
                                 {isImage(current.ext) ? (
                                   <img src={thumbUrl(current.path, 1280)} alt={current.name} />
+                                ) : isVideo(current.ext) ? (
+                                  <video src={mediaUrl(current.path)} controls />
                                 ) : (
                                   <div className="preview-ico">{iconFor(current.ext)}</div>
                                 )}

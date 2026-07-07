@@ -15,6 +15,15 @@ import {
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
 
 const IMAGE_RE = /\.(jpe?g|png|gif|webp|bmp|svg|avif|heic|tiff?)$/i
+const VIDEO_RE = /\.(mp4|m4v|mov|avi|mkv|webm|flv|wmv|mpe?g|3gp|ogv)$/i
+
+// Which files a given area's library should list. Videos show video files,
+// images/screenshots show images, and the Files library shows any file.
+function acceptFor(area) {
+  if (area === 'videos') return (name) => VIDEO_RE.test(name)
+  if (area === 'files') return (name) => !name.startsWith('.')
+  return (name) => IMAGE_RE.test(name)
+}
 
 let client = null
 let clientKey = '' // fingerprint of the config the current client was built from
@@ -184,7 +193,7 @@ function requireLib(lib) {
   return lib
 }
 
-async function listLocal(base, fsub) {
+async function listLocal(base, fsub, accept = (n) => IMAGE_RE.test(n)) {
   const dir = join(base, fsub)
   let entries = []
   try {
@@ -197,7 +206,7 @@ async function listLocal(base, fsub) {
   for (const e of entries) {
     if (e.isDirectory()) {
       folders.push({ name: e.name, sub: fsub + e.name + '/' })
-    } else if (e.isFile() && IMAGE_RE.test(e.name)) {
+    } else if (e.isFile() && accept(e.name)) {
       let size = 0
       let modified = 0
       try {
@@ -216,7 +225,8 @@ async function listLocal(base, fsub) {
 export async function libraryList(area, sub = '') {
   const lib = requireLib(await getLibrary(area))
   const fsub = folderSub(sub)
-  if (lib.mode === 'local') return listLocal(lib.localPath, fsub)
+  const accept = acceptFor(area)
+  if (lib.mode === 'local') return listLocal(lib.localPath, fsub, accept)
 
   const prefix = r2Base(lib) + fsub
   const { c, cfg } = await resolveClient()
@@ -228,7 +238,7 @@ export async function libraryList(area, sub = '') {
     return { name, sub: fsub + name + '/' }
   })
   const items = (out.Contents || [])
-    .filter((o) => o.Key !== prefix && IMAGE_RE.test(o.Key))
+    .filter((o) => o.Key !== prefix && accept(o.Key))
     .map((o) => ({
       name: o.Key.slice(prefix.length),
       sub: fsub + o.Key.slice(prefix.length),
@@ -343,6 +353,7 @@ export async function saveBytes(area, destSub, filename, buffer, contentType) {
 // top level, and items inside each top-level group (recursive within a group).
 export async function libraryCounts(area) {
   const lib = requireLib(await getLibrary(area))
+  const accept = acceptFor(area)
   const out = { total: 0, root: 0, groups: {} }
 
   if (lib.mode === 'local') {
@@ -355,7 +366,7 @@ export async function libraryCounts(area) {
         return 0
       }
       for (const e of entries) {
-        if (e.isFile() && IMAGE_RE.test(e.name)) n++
+        if (e.isFile() && accept(e.name)) n++
         else if (e.isDirectory() && !e.name.startsWith('.')) n += await countDir(join(dir, e.name))
       }
       return n
@@ -367,7 +378,7 @@ export async function libraryCounts(area) {
       return out
     }
     for (const e of entries) {
-      if (e.isFile() && IMAGE_RE.test(e.name)) out.root++
+      if (e.isFile() && accept(e.name)) out.root++
       else if (e.isDirectory() && !e.name.startsWith('.')) {
         out.groups[e.name] = await countDir(join(lib.localPath, e.name))
       }
@@ -386,7 +397,7 @@ export async function libraryCounts(area) {
       new ListObjectsV2Command({ Bucket: cfg.bucket, Prefix: base, ContinuationToken: token })
     )
     for (const o of res.Contents || []) {
-      if (!IMAGE_RE.test(o.Key)) continue
+      if (!accept(o.Key)) continue
       const rest = o.Key.slice(base.length)
       const slash = rest.indexOf('/')
       if (slash < 0) out.root++

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import AreaLayout from '../components/AreaLayout.jsx'
 import LibrarySetup from '../components/LibrarySetup.jsx'
-import LibraryBrowser from '../components/LibraryBrowser.jsx'
+import VideoGallery from '../components/VideoGallery.jsx'
 import ScanImport from '../components/ScanImport.jsx'
 import { CATEGORIES } from '../lib/fileTypes.js'
 import { getGroups, addGroup, removeGroup, mergeGroups, safeName } from '../lib/groups.js'
@@ -102,10 +102,7 @@ export default function VideosArea() {
           )}
         </div>
       ) : (
-        <LibraryBrowser
-          area="videos"
-          label="Videos"
-          addExts={CATEGORIES.Video}
+        <VideoGallery
           sub={sub}
           setSub={setSub}
           reloadToken={reload}
