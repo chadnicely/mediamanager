@@ -1,8 +1,19 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { loadData, saveData, newId } from '../lib/storage.js'
+import { parseEnex } from '../lib/enex.js'
 import Sidebar from '../components/Sidebar.jsx'
 import NoteList from '../components/NoteList.jsx'
+import NoteSearch from '../components/NoteSearch.jsx'
 import Editor from '../components/Editor.jsx'
+
+function readText(file) {
+  return new Promise((resolve, reject) => {
+    const r = new FileReader()
+    r.onload = () => resolve(String(r.result || ''))
+    r.onerror = () => reject(r.error)
+    r.readAsText(file)
+  })
+}
 
 // Strip HTML so body search matches visible text, not tag names.
 function plainText(html) {
@@ -21,8 +32,76 @@ export default function NotesApp() {
   const [activeNoteId, setActiveNoteId] = useState(null)
   const [search, setSearch] = useState('')
   const [loaded, setLoaded] = useState(false)
+  const [importMsg, setImportMsg] = useState('')
+  const [searchOpen, setSearchOpen] = useState(false)
+
+  // Ctrl/Cmd+K opens the quick-search palette.
+  useEffect(() => {
+    function onKey(e) {
+      if ((e.ctrlKey || e.metaKey) && (e.key === 'k' || e.key === 'K')) {
+        e.preventDefault()
+        setSearchOpen(true)
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [])
+
+  function openNoteFromSearch(id) {
+    setActiveNotebook('all')
+    setSearch('')
+    setActiveNoteId(id)
+    setSearchOpen(false)
+  }
 
   const saveTimer = useRef(null)
+  const fileInputRef = useRef(null)
+
+  // Import Evernote .enex export(s): one group per file, text + formatting.
+  async function handleImportFiles(e) {
+    const files = Array.from(e.target.files || [])
+    e.target.value = '' // let the same file be re-selected later
+    if (!files.length) return
+    setImportMsg('Importing…')
+    const newNotebooks = []
+    const newNotes = []
+    let skipped = 0
+    let errored = 0
+    for (const file of files) {
+      try {
+        const text = await readText(file)
+        const { notes: parsed, skippedAttachments, error } = parseEnex(text)
+        if (error) {
+          errored++
+          continue
+        }
+        const nb = { id: newId(), name: file.name.replace(/\.enex$/i, '') || 'Imported' }
+        newNotebooks.push(nb)
+        skipped += skippedAttachments
+        for (const n of parsed) {
+          newNotes.push({
+            id: newId(),
+            notebookId: nb.id,
+            title: n.title,
+            body: n.body,
+            createdAt: n.createdAt,
+            updatedAt: n.updatedAt
+          })
+        }
+      } catch {
+        errored++
+      }
+    }
+    if (newNotebooks.length) setNotebooks((prev) => [...prev, ...newNotebooks])
+    if (newNotes.length) setNotes((prev) => [...newNotes, ...prev])
+    const parts = [
+      `Imported ${newNotes.length} note${newNotes.length === 1 ? '' : 's'} into ${newNotebooks.length} group${newNotebooks.length === 1 ? '' : 's'}.`
+    ]
+    if (skipped) parts.push(`${skipped} attachment${skipped === 1 ? '' : 's'} skipped (text-only import).`)
+    if (errored) parts.push(`${errored} file${errored === 1 ? '' : 's'} couldn’t be read.`)
+    setImportMsg(parts.join(' '))
+    setTimeout(() => setImportMsg(''), 9000)
+  }
 
   useEffect(() => {
     loadData().then((data) => {
@@ -129,7 +208,17 @@ export default function NotesApp() {
         onNewNote={createNote}
         onCreateNotebook={createNotebook}
         onDeleteNotebook={deleteNotebook}
+        onImport={() => fileInputRef.current?.click()}
       />
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".enex"
+        multiple
+        style={{ display: 'none' }}
+        onChange={handleImportFiles}
+      />
+      {importMsg && <div className="toast">{importMsg}</div>}
       <NoteList
         notes={visibleNotes}
         activeNoteId={activeNoteId}
@@ -141,7 +230,16 @@ export default function NotesApp() {
         onToggleFavorite={toggleFavorite}
         notebooks={notebooks}
         onMove={moveNote}
+        onOpenSearch={() => setSearchOpen(true)}
       />
+      {searchOpen && (
+        <NoteSearch
+          notes={notes}
+          notebooks={notebooks}
+          onOpen={openNoteFromSearch}
+          onClose={() => setSearchOpen(false)}
+        />
+      )}
       <Editor
         note={activeNote}
         notebooks={notebooks}

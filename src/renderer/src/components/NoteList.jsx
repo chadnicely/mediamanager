@@ -45,7 +45,8 @@ export default function NoteList({
   onDelete,
   onToggleFavorite,
   notebooks = [],
-  onMove
+  onMove,
+  onOpenSearch
 }) {
   const searching = search.trim().length > 0
   const [menu, setMenu] = useState(null) // { x, y, noteId, title, favorite, notebookId, groupOpen }
@@ -90,15 +91,15 @@ export default function NoteList({
           <span className="search-icon">⌕</span>
           <input
             type="text"
-            placeholder="Search all notes"
+            placeholder="Search all notes…"
             value={search}
-            onChange={(e) => onSearch(e.target.value)}
+            readOnly
+            onMouseDown={(e) => {
+              e.preventDefault()
+              onOpenSearch?.()
+            }}
           />
-          {searching && (
-            <button className="search-clear" title="Clear search" onClick={() => onSearch('')}>
-              ×
-            </button>
-          )}
+          <span className="search-kbd">Ctrl K</span>
         </div>
       </div>
 

@@ -8,7 +8,8 @@ export default function Sidebar({
   onSelectNotebook,
   onNewNote,
   onCreateNotebook,
-  onDeleteNotebook
+  onDeleteNotebook,
+  onImport
 }) {
   const [creating, setCreating] = useState(false)
   const [draft, setDraft] = useState('')
@@ -35,6 +36,12 @@ export default function Sidebar({
       <button className="new-note-btn" onClick={onNewNote}>
         + New Note
       </button>
+
+      {onImport && (
+        <button className="import-btn" title="Import notes from an Evernote .enex export" onClick={onImport}>
+          ⬇ Import from Evernote
+        </button>
+      )}
 
       <nav className="nav">
         <button
