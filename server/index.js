@@ -89,7 +89,7 @@ async function start() {
     console.error('✗ MongoDB connection failed:', e.message)
     console.error('  The API will start, but auth calls will fail until MongoDB is reachable.')
   }
-  app.listen(PORT, () => console.log(`✓ Jotter API listening on http://localhost:${PORT}`))
+  app.listen(PORT, () => console.log(`✓ Sniddy API listening on http://localhost:${PORT}`))
 }
 
 start()

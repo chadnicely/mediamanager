@@ -29,8 +29,8 @@ export default function Sidebar({
   return (
     <aside className="sidebar">
       <div className="sidebar-brand">
-        <div className="brand-avatar">J</div>
-        <div className="brand-name">Jotter</div>
+        <div className="brand-avatar">S</div>
+        <div className="brand-name">Sniddy</div>
       </div>
 
       <button className="new-note-btn" onClick={onNewNote}>
@@ -147,10 +147,10 @@ export default function Sidebar({
 
       <button
         className="update-pill"
-        title="Relaunch to update Jotter"
+        title="Relaunch to update Sniddy"
         onClick={() => window.location.reload()}
       >
-        <span className="update-icon">J</span>
+        <span className="update-icon">S</span>
         <span className="update-text">
           <span className="update-title">Relaunch to update</span>
           <span className="update-version">v0.1.0</span>

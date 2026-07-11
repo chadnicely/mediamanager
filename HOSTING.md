@@ -1,4 +1,4 @@
-# Jotter — Tech Stack & Hosting Reference
+# Sniddy — Tech Stack & Hosting Reference
 
 **Last updated:** 2026-07-06
 
@@ -6,7 +6,7 @@
 
 ## Repository
 
-**There is no repository.** Jotter has never been put under git — no local repo, no GitHub, no backup copy anywhere except this folder on this machine:
+**There is no repository.** Sniddy has never been put under git — no local repo, no GitHub, no backup copy anywhere except this folder on this machine:
 
 ```
 C:\Users\chad\Antigravity\gcc-frontend\Evernote\
@@ -30,7 +30,7 @@ If this project needs to move to another machine or be handed to another develop
 | Auth database | MongoDB (Atlas-hosted, see below) |
 | Password hashing | bcryptjs |
 | Session tokens | JWT (jsonwebtoken) |
-| Screenshot sharing | Cloudflare Worker + R2 bucket (separate from user buckets — Jotter-owned) |
+| Screenshot sharing | Cloudflare Worker + R2 bucket (separate from user buckets — Sniddy-owned) |
 | Browser capture | Chrome Extension, Manifest V3 (unpacked / not published) |
 
 ---
@@ -39,7 +39,7 @@ If this project needs to move to another machine or be handed to another develop
 
 | Service | Where it runs today | Notes |
 |---|---|---|
-| Jotter desktop app | User's PC (Electron) | Not distributed — dev-mode only (`npm run dev`) |
+| Sniddy desktop app | User's PC (Electron) | Not distributed — dev-mode only (`npm run dev`) |
 | Auth API (`server/`) | User's PC, port **4500** | **Not publicly hosted.** Must be deployed somewhere (Render/Railway/Fly.io/VPS) before the app can be given to other users — right now only works on this one machine. |
 | Extension → app bridge (`receiver.js`) | User's PC, port **47600** | Loopback only, not exposed to the internet. Chrome extension talks to it directly. |
 | Screenshot share relay | **Cloudflare Workers** (already deployed) | URL: `https://jotter-share.chad-nicely.workers.dev` — see Cloudflare account below |
@@ -72,7 +72,7 @@ The same `.env` file also holds `JWT_SECRET` (a random signing key for login tok
 - **Redeploy command:** `cd share-worker && npx wrangler deploy` (requires `npx wrangler login` once per machine)
 - **Outstanding:** the bucket needs a lifecycle rule (delete objects under `shared/` after 7 days) set manually in the Cloudflare dashboard — confirm this has been done.
 
-This is separate and unrelated to any R2 bucket an individual Jotter *user* connects in Settings — those are the user's own buckets/credentials, stored locally in `storage-config.json` (Electron userData folder), never sent anywhere except directly to that user's bucket.
+This is separate and unrelated to any R2 bucket an individual Sniddy *user* connects in Settings — those are the user's own buckets/credentials, stored locally in `storage-config.json` (Electron userData folder), never sent anywhere except directly to that user's bucket.
 
 ---
 

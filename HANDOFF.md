@@ -1,12 +1,12 @@
-# Jotter — Project Handoff
+# Sniddy — Project Handoff
 
 **Last updated:** 2026-07-06
-**Location:** `gcc-frontend/Evernote/` (folder is literally named `Evernote` — that's a leftover from the original idea, the product is called **Jotter**)
+**Location:** `gcc-frontend/Evernote/` (folder is literally named `Evernote` — that's a leftover from the original idea, the product is called **Sniddy**)
 **Status:** Not under git / version control. No repository exists anywhere (local or GitHub). Everything lives as files on the original machine.
 
 ---
 
-## 1. What Jotter Is
+## 1. What Sniddy Is
 
 A Windows desktop app (Electron + React + Vite) that started as an Evernote clone and grew into a **5-area capture/organize suite**:
 
@@ -18,7 +18,7 @@ A Windows desktop app (Electron + React + Vite) that started as an Evernote clon
 | **Videos** | 🎬 | Same browser pattern as Files, video-focused |
 | **Shots** | 📸 | Screenshot capture + management (the most-developed area) |
 
-Plus a **Chrome extension** ("Jotter Capture") for web-page screenshots, and a **Cloudflare Worker** for sharing screenshots via public links.
+Plus a **Chrome extension** ("Sniddy Capture") for web-page screenshots, and a **Cloudflare Worker** for sharing screenshots via public links.
 
 **User (Chad) is non-technical** — communicates in plain language, wants things "super fast," reacts strongly to visual/UX issues, and needs iterative back-and-forth with live verification (screenshots, running the app) rather than being told something works.
 
@@ -50,7 +50,7 @@ Evernote/
 **Run the app (dev):**
 ```
 cd Evernote
-npm run dev          # starts electron-vite, opens the Jotter window
+npm run dev          # starts electron-vite, opens the Sniddy window
 ```
 **Build:**
 ```
@@ -64,7 +64,7 @@ cd Evernote/server
 npm start             # listens on :4500
 ```
 
-**IMPORTANT PORT RULE (from user's global memory):** frontend dev servers in this user's other projects use :4000, demo backend :3011 — **never use :3000** for anything. Jotter's own ports are :4500 (auth API) and :47600 (Chrome extension receiver) — those are fine, just don't reassign other services to :3000.
+**IMPORTANT PORT RULE (from user's global memory):** frontend dev servers in this user's other projects use :4000, demo backend :3011 — **never use :3000** for anything. Sniddy's own ports are :4500 (auth API) and :47600 (Chrome extension receiver) — those are fine, just don't reassign other services to :3000.
 
 ---
 
@@ -104,11 +104,11 @@ This area got the most iteration. Current state:
 - **🔗 Share link** button/menu on shots offers two choices:
   - **"Get a shareable link"** — uploads to the Cloudflare Worker (`share-worker/`), returns a link that auto-expires in 7 days (max S3 presign lifetime). Uses `lib/share.js` → `hostedShareLink()`. Worker URL is hardcoded: `https://jotter-share.chad-nicely.workers.dev`
   - **"Use my own R2 bucket"** — `storage.shareLink()` presigns a URL from the user's own bucket (uploads a copy under `shared/` first if the item is local)
-- The Worker itself (`share-worker/worker.js`) serves a **branded HTML viewer page** (not a raw image link) — dark theme, Jotter logo, Download button, Copy-link toast, OG meta tags for link previews. Deployed via `npx wrangler deploy` from `share-worker/`. R2 bucket name: `shotshosted`. **User must set a 7-day lifecycle rule on the bucket manually** (Cloudflare dashboard → R2 → bucket → Settings → Object lifecycle rules → prefix `shared/` → Delete after 7 days) — this was NOT done as of last check, confirm with user.
+- The Worker itself (`share-worker/worker.js`) serves a **branded HTML viewer page** (not a raw image link) — dark theme, Sniddy logo, Download button, Copy-link toast, OG meta tags for link previews. Deployed via `npx wrangler deploy` from `share-worker/`. R2 bucket name: `shotshosted`. **User must set a 7-day lifecycle rule on the bucket manually** (Cloudflare dashboard → R2 → bucket → Settings → Object lifecycle rules → prefix `shared/` → Delete after 7 days) — this was NOT done as of last check, confirm with user.
 
 ---
 
-## 5. Chrome Extension ("Jotter Capture")
+## 5. Chrome Extension ("Sniddy Capture")
 
 Location: `chrome-extension/` — MV3, loaded unpacked (not published to the Web Store).
 
@@ -121,21 +121,21 @@ Location: `chrome-extension/` — MV3, loaded unpacked (not published to the Web
 - Shutter sound plays via an **offscreen document** (`offscreen.html/js`) — necessary because normal in-page `<audio>` is blocked by browser autoplay policy on pages the user hasn't interacted with; offscreen extension pages are exempt. Sound is a hand-synthesized WAV (`shutter.wav`) — dry, light "tk-tk" mechanical click (went through several iterations: too deep → too explosion-y → too quiet → landed on this).
 - A **result card** is injected into the page (bottom-right) via `resultCard()` in `background.js`. Shows the screenshot, title says "not saved yet," and offers exactly: **Save / Share / Save+Share** (main row) plus **✏️ Edit** and **🗑 Discard** (top-right icons) — 3+2 buttons total per explicit user request ("only 3 buttons" for the main actions).
 - **Edit** opens a full annotator inside the card: Pen, Highlight, Box, Circle, Arrow, Text, numbered Step badges, Blur (pixelate — for redacting sensitive info), Crop, 6 colors, Undo. Apply returns to the card without auto-saving (user still chooses Save/Share after).
-- **Save** posts to the local receiver (`src/main/receiver.js` on `127.0.0.1:47600`, POST /shots, DELETE /shots?sub=, supports a `replaceSub` field so re-saving after an edit overwrites the earlier version instead of duplicating). If Jotter isn't running, falls back to `chrome.downloads`.
-- **Download** button also present — writes straight to disk without touching Jotter at all (added because "sometimes the file is all you want").
+- **Save** posts to the local receiver (`src/main/receiver.js` on `127.0.0.1:47600`, POST /shots, DELETE /shots?sub=, supports a `replaceSub` field so re-saving after an edit overwrites the earlier version instead of duplicating). If Sniddy isn't running, falls back to `chrome.downloads`.
+- **Download** button also present — writes straight to disk without touching Sniddy at all (added because "sometimes the file is all you want").
 
 ---
 
 ## 6. Print Screen (desktop-native capture)
 
-This was built because the user wanted OS-level Print Screen to open Jotter's capture flow, Jing-style.
+This was built because the user wanted OS-level Print Screen to open Sniddy's capture flow, Jing-style.
 
 **In `src/main/index.js`:**
 - `globalShortcut.register('PrintScreen', ...)` — **this only works if no other app has claimed the key.** Snagit was intercepting it on the user's machine; had to be uninstalled. If registration fails, there's a **clipboard-watcher fallback** (`setInterval` polling `clipboard.readImage()`, seeded with a hash of whatever's on the clipboard at startup so an old screenshot isn't re-imported, only accepts images whose size matches a display or the multi-monitor bounding box).
 - Pressing Print Screen **does not blindly capture** — it opens a **full-screen crosshair overlay** (frozen screenshot of the display under the cursor, dims outside the drag box, live size readout, "Enter = whole screen / Esc = cancel" hint pill). This was iterated from an earlier "chooser pill" design the user rejected as "not sexy."
 - After a region is selected, the **same style of decision card** as the extension opens (bottom-right, draggable/resizable via `cardBounds()`, `openCaptureCard()`) with **Download / Save / Share / Save+Share** + edit/discard icons. The card's HTML/JS is inlined as a template string in `index.js` (`buildCardHtml()`) — it's a full copy of the extension's annotator logic, kept in vanilla JS since it loads via `loadURL('data:text/html...')` in a frameless BrowserWindow, not through the Vite pipeline.
 - `app.setAppUserModelId(...)` is required on Windows for `Notification` to actually display — this was a real bug (notifications silently didn't work without it).
-- A shutter sound plays via the **main Jotter window itself** on the `shots:captured` IPC event (renderer plays `src/renderer/src/assets/shutter.wav` — a copy of the same file bundled into the Vite build) since a global keypress has no "page" to inject audio into.
+- A shutter sound plays via the **main Sniddy window itself** on the `shots:captured` IPC event (renderer plays `src/renderer/src/assets/shutter.wav` — a copy of the same file bundled into the Vite build) since a global keypress has no "page" to inject audio into.
 
 **Known limitation the user was told directly:** Full-page scrolling capture is impossible from the Print Screen path — Windows doesn't let one app drive another app's scroll position. Full-page capture only exists in the Chrome extension, where the extension can control the page it's capturing.
 

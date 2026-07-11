@@ -1,4 +1,4 @@
-// Jotter share relay (Cloudflare Worker).
+// Sniddy share relay (Cloudflare Worker).
 // POST /upload  { dataUrl }         → stores in R2, returns a viewer-page link
 // GET  /s/<id>.<ext>                → branded viewer PAGE (Jing-style header + image)
 // GET  /i/<id>.<ext>                → the raw image bytes (used by the page + Download)
@@ -21,8 +21,8 @@ function page(origin, name) {
   const img = `${origin}/i/${name}`
   return `<!doctype html><html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Shared with Jotter</title>
-<meta property="og:title" content="Shared with Jotter">
+<title>Shared with Sniddy</title>
+<meta property="og:title" content="Shared with Sniddy">
 <meta property="og:image" content="${img}">
 <meta name="twitter:card" content="summary_large_image">
 <style>
@@ -63,7 +63,7 @@ function page(origin, name) {
 <header>
   <div class="brand">
     <div class="mark">J</div>
-    <div><div class="name">Jotter</div><div class="tag">Screenshots at the speed of conversation</div></div>
+    <div><div class="name">Sniddy</div><div class="tag">Screenshots at the speed of conversation</div></div>
   </div>
   <div class="actions">
     <button class="btn ghost" onclick="copyLink()">
@@ -77,7 +77,7 @@ function page(origin, name) {
   </div>
 </header>
 <main><figure><div class="frame"><img src="${img}" alt="Shared screenshot"></div></figure></main>
-<footer>Captured with <strong style="color:var(--brand2)">Jotter</strong> &middot; link expires in 7 days</footer>
+<footer>Captured with <strong style="color:var(--brand2)">Sniddy</strong> &middot; link expires in 7 days</footer>
 <div class="toast" id="toast">Link copied</div>
 <script>
   function copyLink(){navigator.clipboard.writeText(location.href).then(()=>{var t=document.getElementById('toast');t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1600)})}
@@ -137,6 +137,6 @@ export default {
       return html(page(url.origin, name))
     }
 
-    return new Response('Jotter share relay', { status: 200, headers: CORS })
+    return new Response('Sniddy share relay', { status: 200, headers: CORS })
   }
 }

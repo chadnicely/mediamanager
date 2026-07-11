@@ -28,8 +28,8 @@ export default function AuthScreen({ onAuthed }) {
     <div className="auth">
       <form className="auth-card" onSubmit={submit}>
         <div className="auth-brand">
-          <div className="auth-logo">J</div>
-          <div className="auth-title">Jotter</div>
+          <div className="auth-logo">S</div>
+          <div className="auth-title">Sniddy</div>
         </div>
 
         <h1 className="auth-h1">{mode === 'login' ? 'Welcome back' : 'Create your account'}</h1>

@@ -1,4 +1,4 @@
-# Jotter Share Relay
+# Sniddy Share Relay
 
 A tiny Cloudflare Worker that hosts shared screenshots in your R2 bucket and
 serves them at a short public link. Keeps the bucket private + no keys in the app.

@@ -20,15 +20,15 @@ groupInput.addEventListener('input', () => {
   chrome.storage.local.set({ group: groupInput.value.trim() })
 })
 
-// Show whether the Jotter desktop app is reachable.
+// Show whether the Sniddy desktop app is reachable.
 send({ type: 'ping-jotter' }).then((r) => {
   if (r.ok) {
-    connEl.textContent = 'Jotter connected'
+    connEl.textContent = 'Sniddy connected'
     connEl.className = 'conn on'
   } else {
-    connEl.textContent = 'Jotter offline'
+    connEl.textContent = 'Sniddy offline'
     connEl.className = 'conn off'
-    setStatus('Jotter isn’t running — captures will download to your computer instead.')
+    setStatus('Sniddy isn’t running — captures will download to your computer instead.')
   }
 })
 

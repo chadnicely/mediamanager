@@ -1,7 +1,7 @@
 {
   "name": "jotter",
   "version": "0.1.0",
-  "description": "Jotter — a minimal desktop notes app",
+  "description": "Sniddy — a minimal desktop notes app",
   "main": "./out/main/index.js",
   "author": "Chad Nicely",
   "license": "MIT",
@@ -10,7 +10,10 @@
     "build": "electron-vite build",
     "start": "electron-vite preview",
     "build:win": "electron-vite build && electron-builder --win",
-    "build:dir": "electron-vite build && electron-builder --dir"
+    "build:dir": "electron-vite build && electron-builder --dir",
+    "web:dev": "vite --config vite.config.web.mjs",
+    "web:build": "vite build --config vite.config.web.mjs",
+    "web:preview": "vite preview --config vite.config.web.mjs"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1079.0",
@@ -26,8 +29,8 @@
     "vite": "^5.4.11"
   },
   "build": {
-    "appId": "com.chadnicely.jotter",
-    "productName": "Jotter",
+    "appId": "com.chadnicely.sniddy",
+    "productName": "Sniddy",
     "directories": {
       "output": "release"
     },

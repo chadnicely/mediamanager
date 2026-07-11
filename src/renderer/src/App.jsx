@@ -8,6 +8,8 @@ import ScreenshotsArea from './areas/ScreenshotsArea.jsx'
 import StorageSettings from './components/StorageSettings.jsx'
 import AuthScreen from './components/AuthScreen.jsx'
 import PromptHost from './components/PromptHost.jsx'
+import MobileApp from './mobile/MobileApp.jsx'
+import { useIsMobile } from './lib/useIsMobile.js'
 import { getToken, me, logout } from './lib/auth.js'
 
 const AREAS = [
@@ -23,6 +25,7 @@ export default function App() {
   const [user, setUser] = useState(null)
   const [area, setArea] = useState('notes')
   const [settingsOpen, setSettingsOpen] = useState(false)
+  const isMobile = useIsMobile()
 
   // Shutter sound whenever a capture lands (Print Screen etc.) — audible
   // feedback even if the window is minimized.
@@ -67,12 +70,27 @@ export default function App() {
     setAuthState('anon')
   }
 
+  // In the hosted web/PWA build there's no local Electron bridge. Notes live in
+  // on-device storage, so the app is local-first: it opens straight into the
+  // mobile shell with no server required. (An account stays optional — if one is
+  // signed in we pass it through for a future sync feature.)
+  const isWeb = !window.api
+
   if (authState === 'checking') {
     return (
       <div className="app-splash">
-        <div className="rail-brand">J</div>
-        <p>Loading Jotter…</p>
+        <div className="rail-brand">S</div>
+        <p>Loading Sniddy…</p>
       </div>
+    )
+  }
+
+  if (isWeb) {
+    return (
+      <>
+        <MobileApp user={user} onSignOut={user ? signOut : null} />
+        <PromptHost />
+      </>
     )
   }
 
@@ -82,10 +100,20 @@ export default function App() {
 
   const openSettings = () => setSettingsOpen(true)
 
+  // Phone-width Electron window → same mobile shell.
+  if (isMobile) {
+    return (
+      <>
+        <MobileApp user={user} onSignOut={signOut} />
+        <PromptHost />
+      </>
+    )
+  }
+
   return (
     <div className="app-shell">
       <nav className="app-rail">
-        <div className="rail-brand">J</div>
+        <div className="rail-brand">S</div>
         {AREAS.map((a) => (
           <button
             key={a.id}

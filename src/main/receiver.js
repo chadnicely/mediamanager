@@ -1,4 +1,4 @@
-// Tiny loopback HTTP server so the Jotter Chrome extension can hand off
+// Tiny loopback HTTP server so the Sniddy Chrome extension can hand off
 // captured screenshots. Binds to 127.0.0.1 only. Requests are accepted from
 // chrome-extension:// origins (the extension) and refused otherwise, so a
 // random web page can't quietly drop files into the user's Shots.
@@ -74,7 +74,7 @@ export function startReceiver() {
       return
     }
 
-    // Health check the extension uses to detect whether Jotter is running.
+    // Health check the extension uses to detect whether Sniddy is running.
     if (req.method === 'GET' && req.url.startsWith('/ping')) {
       send(res, 200, { ok: true, app: 'jotter', area: AREA })
       return
@@ -95,7 +95,7 @@ export function startReceiver() {
         if (!lib) {
           send(res, 409, {
             ok: false,
-            error: 'Set up a storage location in Jotter (any area) before capturing.'
+            error: 'Set up a storage location in Sniddy (any area) before capturing.'
           })
           return
         }
@@ -142,7 +142,7 @@ export function startReceiver() {
   })
 
   server.on('error', (e) => {
-    // Most likely the port is already in use (another Jotter instance). Non-fatal.
+    // Most likely the port is already in use (another Sniddy instance). Non-fatal.
     console.error('[receiver] could not start:', e.message)
   })
 

@@ -1,14 +1,14 @@
 {
   "manifest_version": 3,
-  "name": "Jotter Capture",
+  "name": "Sniddy Web Clipper",
   "version": "1.0.0",
-  "description": "Capture the visible tab, a full page, or a region and save it straight into Jotter's Shots.",
+  "description": "Capture the visible tab, a full page, or a region and save it straight into Sniddy's Shots.",
   "permissions": ["activeTab", "scripting", "storage", "notifications", "downloads", "debugger", "offscreen"],
   "host_permissions": ["http://127.0.0.1:47600/*"],
   "background": { "service_worker": "background.js" },
   "icons": { "128": "icon.png" },
   "action": {
-    "default_title": "Jotter Capture",
+    "default_title": "Sniddy Web Clipper",
     "default_popup": "popup.html",
     "default_icon": { "128": "icon.png" }
   },
@@ -30,7 +30,7 @@
     },
     "open-bar": {
       "suggested_key": { "default": "Ctrl+Shift+4" },
-      "description": "Open the Jotter capture bar"
+      "description": "Open the Sniddy capture bar"
     }
   }
 }

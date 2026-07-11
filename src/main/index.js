@@ -9,7 +9,7 @@ import { startReceiver } from './receiver.js'
 
 // The login/accounts API lives in server/ and normally has to be started by
 // hand in a second terminal. In dev we launch it automatically so opening
-// Jotter is all it takes. Packaged builds skip this and talk to the hosted API.
+// Sniddy is all it takes. Packaged builds skip this and talk to the hosted API.
 let authServerProc = null
 
 function portInUse(port) {
@@ -310,7 +310,7 @@ function createWindow() {
     maximizable: true,
     closable: true,
     autoHideMenuBar: true,
-    title: 'Jotter',
+    title: 'Sniddy',
     backgroundColor: '#ffffff',
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
@@ -349,7 +349,7 @@ function createWindow() {
 
 app.whenReady().then(() => {
   // Required on Windows for Notifications to actually display.
-  app.setAppUserModelId('com.jotter.desktop')
+  app.setAppUserModelId('com.sniddy.desktop')
 
   // Serve local files for local-folder libraries. With ?t=<px> it serves a
   // cached, resized thumbnail instead of the full file (huge speed-up).
@@ -494,7 +494,7 @@ app.whenReady().then(() => {
     return true
   })
 
-  startReceiver() // loopback endpoint for the Jotter Chrome extension
+  startReceiver() // loopback endpoint for the Sniddy Chrome extension
 
   // ---- Print Screen → crosshair region picker --------------------------------
   // Pressing Print Screen freezes the screen under the cursor and shows a
@@ -510,7 +510,7 @@ app.whenReady().then(() => {
   function notifyCaptured(body) {
     if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send('shots:captured')
     try {
-      new Notification({ title: '📸 Captured to Jotter', body, silent: true }).show()
+      new Notification({ title: '📸 Captured to Sniddy', body, silent: true }).show()
     } catch {
       /* notifications unavailable */
     }
@@ -690,7 +690,7 @@ app.whenReady().then(() => {
         return { ok: true }
       }
       if (action === 'discard') {
-        // If it was saved from this card, remove it from Jotter too.
+        // If it was saved from this card, remove it from Sniddy too.
         if (cardCtx?.savedSub) {
           try {
             await storage.libraryRemove('screenshots', cardCtx.savedSub)
@@ -716,13 +716,13 @@ app.whenReady().then(() => {
         } else {
           buffer = await readFile(cardCtx.path)
         }
-        const dest = join(app.getPath('downloads'), `Jotter Capture ${stampNow()}.png`)
+        const dest = join(app.getPath('downloads'), `Sniddy Capture ${stampNow()}.png`)
         await writeFile(dest, buffer)
         return { ok: true, path: dest }
       }
       if (action === 'save') {
         const lib = await storage.ensureLibrary('screenshots')
-        if (!lib) return { ok: false, error: 'Set up a storage location in Jotter first.' }
+        if (!lib) return { ok: false, error: 'Set up a storage location in Sniddy first.' }
         let buffer
         if (payload.dataUrl) {
           const m = /^data:([^;,]+)?(;base64)?,(.*)$/s.exec(payload.dataUrl)
@@ -759,13 +759,14 @@ app.whenReady().then(() => {
     return `<!doctype html><meta charset="utf-8"><body style="margin:0;background:transparent;overflow:hidden;height:100vh;font:13px system-ui;color:#e8ecf1">
 <div id="card" style="position:fixed;inset:8px;background:#1f2430;border-radius:14px;box-shadow:0 16px 50px rgba(0,0,0,.55);display:flex;flex-direction:column;overflow:hidden">
   <div style="display:flex;align-items:center;justify-content:space-between;padding:9px 12px">
-    <b id="ttl" style="font-size:12.5px">📸 Captured — not saved yet</b>
+    <span style="display:flex;align-items:center;gap:7px;font-weight:800;font-size:13.5px"><span style="width:20px;height:20px;border-radius:5px;background:linear-gradient(140deg,#6bc23a,#2563eb);display:grid;place-items:center;font-weight:800;font-size:12px">S</span>Sniddy</span>
     <span style="display:flex;gap:2px;align-items:center">
       <button id="bedit" class="ib" title="Edit / annotate"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.83 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5z"/></svg></button>
       <button id="bdel" class="ib danger" title="Discard"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg></button>
       <button id="bx" class="ib" title="Close" style="font-size:14px">✕</button>
     </span>
   </div>
+  <div style="padding:0 12px 9px"><b id="ttl" style="font-size:11.5px;color:#9aa4b2;font-weight:600">📸 Captured — not saved yet</b></div>
   <img id="shot" src="${imgUrl}" style="flex:1;min-height:0;object-fit:contain;background:#12151a;width:100%">
   <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:10px 12px">
     <button id="bdl" class="b"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Download</button>
@@ -816,7 +817,7 @@ app.whenReady().then(() => {
   function doSave(cb){toast('Saving…')
     var p=current?Promise.resolve(current):Promise.resolve(null)
     p.then(function(du){return window.api.cardAction({action:'save',dataUrl:du})}).then(function(r){
-      if(r&&r.ok){saved=true;$('ttl').textContent='📸 Captured — saved to Jotter';toast('Saved to Jotter ✓')}
+      if(r&&r.ok){saved=true;$('ttl').textContent='📸 Captured — saved to Sniddy';toast('Saved to Sniddy ✓')}
       else toast((r&&r.error)||'Save failed')
       if(cb)cb(r&&r.ok)})}
   function doShare(){toast('Creating link…')
@@ -1003,7 +1004,7 @@ app.whenReady().then(() => {
         // Visible feedback — otherwise the capture lands silently.
         try {
           new Notification({
-            title: '📸 Captured to Jotter',
+            title: '📸 Captured to Sniddy',
             body: 'Your Print Screen was saved to Shots.',
             silent: true
           }).show()

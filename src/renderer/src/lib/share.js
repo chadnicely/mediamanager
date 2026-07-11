@@ -1,4 +1,4 @@
-// Hosted sharing — uploads an image to Jotter's share relay (Cloudflare Worker
+// Hosted sharing — uploads an image to Sniddy's share relay (Cloudflare Worker
 // + R2) and returns a public viewer-page link that expires in 7 days.
 export const HOSTED_WORKER = 'https://jotter-share.chad-nicely.workers.dev'
 

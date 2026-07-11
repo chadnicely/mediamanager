@@ -175,7 +175,7 @@ export default function ScreenshotsArea() {
     a.click()
   }
 
-  // Share via Jotter's hosted relay — works for everyone, link expires in 7 days.
+  // Share via Sniddy's hosted relay — works for everyone, link expires in 7 days.
   async function shareHostedShot(s) {
     if (!s) return
     flash('Creating link…')
@@ -296,7 +296,7 @@ export default function ScreenshotsArea() {
           {shots.length === 0 ? (
             <div className="area-note center">
               No captures {activeGroup ? `in “${activeGroup}”` : 'yet'}. Hit “Capture screen”, or
-              use the Jotter browser extension.
+              use the Sniddy browser extension.
             </div>
           ) : (
             <div
@@ -461,7 +461,7 @@ export default function ScreenshotsArea() {
                   <div className="share-menu">
                     <button onClick={() => shareHostedShot(cur)}>
                       <b>Get a shareable link</b>
-                      <small>Hosted by Jotter · expires in 7 days</small>
+                      <small>Hosted by Sniddy · expires in 7 days</small>
                     </button>
                     <button onClick={() => shareOwnR2(cur)}>
                       <b>Use my own R2 bucket</b>

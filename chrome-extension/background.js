@@ -1,6 +1,6 @@
-// Jotter Capture — service worker.
-// Handles three capture modes and hands the result to the Jotter desktop app
-// via its loopback receiver (falling back to a normal download if Jotter isn't
+// Sniddy Capture — service worker.
+// Handles three capture modes and hands the result to the Sniddy desktop app
+// via its loopback receiver (falling back to a normal download if Sniddy isn't
 // running, so a capture is never silently lost).
 
 const JOTTER_URL = 'http://127.0.0.1:47600'
@@ -80,7 +80,7 @@ async function finishCapture(tab, dataUrl) {
   if (dataUrl.length > 12_000_000) {
     const r = await saveDirect(dataUrl)
     notify(
-      r.ok ? 'Saved to Jotter' : 'Capture failed',
+      r.ok ? 'Saved to Sniddy' : 'Capture failed',
       r.ok ? 'Too large for the preview card — saved straight to Shots.' : r.error || ''
     )
     return { ok: r.ok, error: r.error }
@@ -89,7 +89,7 @@ async function finishCapture(tab, dataUrl) {
   return { ok: true }
 }
 
-// Save a capture to Jotter without the card (download fallback if offline).
+// Save a capture to Sniddy without the card (download fallback if offline).
 async function saveDirect(dataUrl) {
   try {
     const group = await getGroup()
@@ -104,7 +104,7 @@ async function saveDirect(dataUrl) {
     try {
       await chrome.downloads.download({
         url: dataUrl,
-        filename: `Jotter Shots/Capture ${stamp()}.png`
+        filename: `Sniddy Shots/Capture ${stamp()}.png`
       })
       return { ok: true, fallback: true }
     } catch (e) {
@@ -341,7 +341,7 @@ function blobToDataUrl(blob) {
 
 // --- Post-capture result card (runs inside the page) -------------------------
 // Self-contained: preview + Save / Share / Edit / Delete, plus a small
-// annotator (pen, box, arrow, text) that saves the edited copy back to Jotter.
+// annotator (pen, box, arrow, text) that saves the edited copy back to Sniddy.
 function resultCard(dataUrl, sub) {
   const old = document.getElementById('__jotter_result')
   if (old) old.remove()
@@ -360,6 +360,10 @@ function resultCard(dataUrl, sub) {
     @keyframes in{from{transform:translateY(14px);opacity:0}to{transform:none;opacity:1}}
     .head{display:flex;align-items:center;justify-content:space-between;padding:9px 12px}
     .head b{font-size:12.5px}
+    .brand{display:flex;align-items:center;gap:7px;font-weight:800;font-size:13.5px;color:#fff}
+    .brand .s{width:20px;height:20px;border-radius:5px;background:linear-gradient(140deg,#6bc23a,#2563eb);display:grid;place-items:center;font-weight:800;font-size:12px;color:#fff}
+    .substatus{padding:0 12px 9px;font-size:11.5px;color:#9aa4b2}
+    .substatus .ttl{font-weight:600;font-size:11.5px}
     .hbtns{display:flex;gap:2px;align-items:center}
     .ib{border:none;background:none;color:#9aa4b2;cursor:pointer;padding:5px;border-radius:6px;display:grid;place-items:center}
     .ib:hover{color:#fff;background:#2d3440}
@@ -386,7 +390,7 @@ function resultCard(dataUrl, sub) {
     canvas{max-width:92vw;max-height:72vh;border-radius:8px;box-shadow:0 20px 60px rgba(0,0,0,.6);cursor:crosshair;background:#fff}
   </style>
   <div class="card">
-    <div class="head"><b class="ttl">📸 Captured — not saved yet</b>
+    <div class="head"><span class="brand"><span class="s">S</span>Sniddy</span>
       <span class="hbtns">
         <button class="ib hdl" title="Download to your computer">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
@@ -400,15 +404,16 @@ function resultCard(dataUrl, sub) {
         <button class="x" title="Close">✕</button>
       </span>
     </div>
+    <div class="substatus"><b class="ttl">📸 Captured — not saved yet</b></div>
     <img class="shot" title="Click to open full size">
     <div class="row">
-      <button class="b save" title="Save into Jotter's Shots">
+      <button class="b save" title="Save into Sniddy's Shots">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Save
       </button>
       <button class="b share" title="Copy a share link (expires in 7 days)">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>Share
       </button>
-      <button class="b both" title="Save to Jotter and copy a share link">
+      <button class="b both" title="Save to Sniddy and copy a share link">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Save + Share
       </button>
     </div>
@@ -427,19 +432,19 @@ function resultCard(dataUrl, sub) {
     toastT = setTimeout(() => toastEl.classList.remove('on'), 1800)
   }
 
-  // Save into Jotter (replaces the previous save if re-saving after an edit).
+  // Save into Sniddy (replaces the previous save if re-saving after an edit).
   function saveShot(cb) {
     toast('Saving…')
     chrome.runtime.sendMessage(
       { type: 'save-shot', dataUrl: current, replaceSub: currentSub },
       (r) => {
         if (r && r.ok && r.fallback) {
-          toast('Jotter offline — downloaded instead')
+          toast('Sniddy offline — downloaded instead')
           $('.ttl').textContent = '📸 Captured — downloaded'
         } else if (r && r.ok) {
           currentSub = r.saved || currentSub
-          toast('Saved to Jotter ✓')
-          $('.ttl').textContent = '📸 Captured — saved to Jotter'
+          toast('Saved to Sniddy ✓')
+          $('.ttl').textContent = '📸 Captured — saved to Sniddy'
         } else {
           toast((r && r.error) || 'Save failed')
         }
@@ -474,7 +479,7 @@ function resultCard(dataUrl, sub) {
   $('.both').onclick = () => saveShot((ok) => ok && shareShot())
   $('.hdel').onclick = () => {
     if (currentSub) {
-      // Was saved this session — remove it from Jotter too.
+      // Was saved this session — remove it from Sniddy too.
       chrome.runtime.sendMessage({ type: 'delete-shot', sub: currentSub }, () => {})
     }
     toast('Discarded')
@@ -562,7 +567,7 @@ function resultCard(dataUrl, sub) {
     ed.querySelector('.ok').onclick = () => {
       current = cv.toDataURL('image/png')
       $('.shot').src = current
-      toast(currentSub ? 'Edited — hit Save to update Jotter' : 'Edited — now Save or Share')
+      toast(currentSub ? 'Edited — hit Save to update Sniddy' : 'Edited — now Save or Share')
       ed.remove()
     }
 
@@ -785,7 +790,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
           const out = await r.json().catch(() => ({}))
           sendResponse({ ok: r.ok && out.ok, error: out.error })
         } catch (e) {
-          sendResponse({ ok: false, error: 'Jotter is not running' })
+          sendResponse({ ok: false, error: 'Sniddy is not running' })
         }
         return
       }
@@ -806,11 +811,11 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
           const out = await r.json().catch(() => ({}))
           sendResponse({ ok: r.ok && out.ok, saved: out.saved, error: out.error })
         } catch {
-          // Jotter isn't running → download so the capture isn't lost.
+          // Sniddy isn't running → download so the capture isn't lost.
           try {
             await chrome.downloads.download({
               url: msg.dataUrl,
-              filename: `Jotter Shots/Capture ${stamp()}.png`
+              filename: `Sniddy Shots/Capture ${stamp()}.png`
             })
             sendResponse({ ok: true, fallback: true })
           } catch (e) {

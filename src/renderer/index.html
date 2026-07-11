@@ -2,12 +2,26 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover"
+    />
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'self'; img-src 'self' data: blob: https: jotter-media:; media-src 'self' blob: https: jotter-media:; connect-src 'self' http://localhost:* http://127.0.0.1:* https:; style-src 'self' 'unsafe-inline'; script-src 'self'"
+      content="default-src 'self'; img-src 'self' data: blob: https: jotter-media:; media-src 'self' blob: https: jotter-media:; connect-src 'self' http://localhost:* http://127.0.0.1:* https:; style-src 'self' 'unsafe-inline'; script-src 'self'; manifest-src 'self'"
     />
-    <title>Jotter</title>
+
+    <!-- PWA / installable web app -->
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <meta name="theme-color" content="#2563eb" />
+    <link rel="icon" type="image/svg+xml" href="./icon.svg" />
+    <link rel="apple-touch-icon" href="./apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="Sniddy" />
+
+    <title>Sniddy</title>
   </head>
   <body>
     <div id="root"></div>

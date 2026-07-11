@@ -1,4 +1,4 @@
-// Parse an Evernote .enex export into Jotter-shaped notes:
+// Parse an Evernote .enex export into Sniddy-shaped notes:
 //   { title, body (HTML), createdAt, updatedAt }
 // Focused on text + formatting. Attachments (<en-media>) are dropped, and a
 // count of skipped attachments is reported so nothing is silently lost.

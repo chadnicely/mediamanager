@@ -1,7 +1,7 @@
 {
   "name": "jotter-server",
   "version": "0.1.0",
-  "description": "Jotter accounts + API backend (Express + MongoDB)",
+  "description": "Sniddy accounts + API backend (Express + MongoDB)",
   "type": "module",
   "main": "index.js",
   "scripts": {
