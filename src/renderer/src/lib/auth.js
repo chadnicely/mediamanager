@@ -10,9 +10,9 @@ const DEFAULT_API = 'http://localhost:4500'
 const LIVE_API = 'https://server-pacino-bots-projects.vercel.app'
 
 export function apiBase() {
-  // Electron desktop talks to its local auto-started API on :4500 (same database).
-  if (typeof window !== 'undefined' && window.api) return DEFAULT_API
-  // Web/PWA: honor an explicitly saved base, otherwise the hosted server.
+  // Everything (desktop + web/PWA) talks to the one hosted backend so accounts
+  // and notes are shared across every device. A saved base can override it for
+  // local development. (DEFAULT_API kept for that dev override / reference.)
   try {
     const saved = localStorage.getItem(API_KEY)
     if (saved && saved.trim()) return saved.trim().replace(/\/+$/, '')
@@ -21,6 +21,7 @@ export function apiBase() {
   }
   return LIVE_API
 }
+export { DEFAULT_API }
 export function setApiBase(url) {
   localStorage.setItem(API_KEY, url)
 }

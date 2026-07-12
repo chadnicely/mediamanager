@@ -21,13 +21,14 @@ export default function NoteSearch({ notes, notebooks, onOpen, onClose }) {
 
   const results = useMemo(() => {
     const query = q.trim().toLowerCase()
+    const live = notes.filter((n) => !n.deleted)
     const base = query
-      ? notes.filter(
+      ? live.filter(
           (n) =>
             (n.title || '').toLowerCase().includes(query) ||
             plainText(n.body).toLowerCase().includes(query)
         )
-      : [...notes].sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0))
+      : [...live].sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0))
     return base.slice(0, 50)
   }, [q, notes])
 

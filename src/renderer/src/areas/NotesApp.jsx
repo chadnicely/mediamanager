@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { loadData, saveData, newId } from '../lib/storage.js'
 import { parseEnex } from '../lib/enex.js'
+import { runSync, syncEnabled } from '../lib/sync.js'
 import Sidebar from '../components/Sidebar.jsx'
 import NoteList from '../components/NoteList.jsx'
 import NoteSearch from '../components/NoteSearch.jsx'
@@ -120,10 +121,34 @@ export default function NotesApp() {
     return () => clearTimeout(saveTimer.current)
   }, [notebooks, notes, loaded])
 
+  // Background sync with the cloud (when signed in): push local changes, pull
+  // server changes, merge. Runs on load and every few seconds. Latest state is
+  // read from refs so the interval never holds stale data or re-subscribes.
+  const syncRef = useRef({ notes: [], notebooks: [] })
+  syncRef.current = { notes, notebooks }
+  useEffect(() => {
+    if (!loaded || !syncEnabled()) return
+    let alive = true
+    async function tick() {
+      const res = await runSync(syncRef.current.notes, syncRef.current.notebooks)
+      if (alive && res && res.changed) {
+        setNotes(res.notes)
+        setNotebooks(res.notebooks)
+      }
+    }
+    tick()
+    const iv = setInterval(tick, 6000)
+    return () => {
+      alive = false
+      clearInterval(iv)
+    }
+  }, [loaded])
+
   const visibleNotes = useMemo(() => {
     const q = search.trim().toLowerCase()
     const searching = q.length > 0
     return notes
+      .filter((n) => !n.deleted)
       .filter(
         (n) =>
           searching ||
@@ -164,16 +189,23 @@ export default function NotesApp() {
   }
 
   function deleteNote(id) {
-    setNotes((prev) => prev.filter((n) => n.id !== id))
+    // Tombstone (not remove) so the delete syncs to your other devices.
+    setNotes((prev) =>
+      prev.map((n) => (n.id === id ? { ...n, deleted: true, updatedAt: Date.now() } : n))
+    )
     if (activeNoteId === id) setActiveNoteId(null)
   }
 
   function toggleFavorite(id) {
-    setNotes((prev) => prev.map((n) => (n.id === id ? { ...n, favorite: !n.favorite } : n)))
+    setNotes((prev) =>
+      prev.map((n) => (n.id === id ? { ...n, favorite: !n.favorite, updatedAt: Date.now() } : n))
+    )
   }
 
   function moveNote(id, notebookId) {
-    setNotes((prev) => prev.map((n) => (n.id === id ? { ...n, notebookId } : n)))
+    setNotes((prev) =>
+      prev.map((n) => (n.id === id ? { ...n, notebookId, updatedAt: Date.now() } : n))
+    )
   }
 
   function createNotebook(name) {
@@ -190,11 +222,12 @@ export default function NotesApp() {
   }
 
   const counts = useMemo(() => {
-    const map = { all: notes.length, favorites: 0 }
+    const live = notes.filter((n) => !n.deleted)
+    const map = { all: live.length, favorites: 0 }
     for (const nb of notebooks) {
-      map[nb.id] = notes.filter((n) => n.notebookId === nb.id).length
+      map[nb.id] = live.filter((n) => n.notebookId === nb.id).length
     }
-    for (const n of notes) if (n.favorite) map.favorites++
+    for (const n of live) if (n.favorite) map.favorites++
     return map
   }, [notes, notebooks])
 
