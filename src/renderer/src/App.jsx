@@ -11,13 +11,21 @@ import PromptHost from './components/PromptHost.jsx'
 import MobileApp from './mobile/MobileApp.jsx'
 import { useIsMobile } from './lib/useIsMobile.js'
 import { getToken, me, logout } from './lib/auth.js'
+import {
+  NotesIcon,
+  FilesIcon,
+  ImagesIcon,
+  VideosIcon,
+  ShotsIcon,
+  SettingsIcon
+} from './components/areaIcons.jsx'
 
 const AREAS = [
-  { id: 'notes', icon: '📝', label: 'Notes' },
-  { id: 'files', icon: '📁', label: 'Files' },
-  { id: 'images', icon: '🖼', label: 'Images' },
-  { id: 'videos', icon: '🎬', label: 'Videos' },
-  { id: 'screenshots', icon: '📸', label: 'Shots' }
+  { id: 'notes', label: 'Notes', Icon: NotesIcon, tint: '#7c83f5' },
+  { id: 'files', label: 'Files', Icon: FilesIcon, tint: '#f5a742' },
+  { id: 'images', label: 'Images', Icon: ImagesIcon, tint: '#2dd4bf' },
+  { id: 'videos', label: 'Videos', Icon: VideosIcon, tint: '#fb7185' },
+  { id: 'screenshots', label: 'Shots', Icon: ShotsIcon, tint: '#a78bfa' }
 ]
 
 export default function App() {
@@ -121,12 +129,16 @@ export default function App() {
             onClick={() => setArea(a.id)}
             title={a.label}
           >
-            <span className="rail-icon">{a.icon}</span>
+            <span className="rail-icon" style={{ color: a.tint }}>
+              <a.Icon />
+            </span>
             <span className="rail-label">{a.label}</span>
           </button>
         ))}
         <button className="rail-item rail-settings" onClick={openSettings} title="Storage settings">
-          <span className="rail-icon">⚙️</span>
+          <span className="rail-icon">
+            <SettingsIcon />
+          </span>
           <span className="rail-label">Settings</span>
         </button>
         <button

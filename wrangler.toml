@@ -1,0 +1,10 @@
+# Cloudflare Pages config for Sniddy (the hosted PWA at sniddy.pages.dev).
+# Binds the sniddy-media R2 bucket to the Pages Functions under /functions,
+# so the phone reads/writes media through the API with no S3 keys in the browser.
+name = "sniddy"
+pages_build_output_dir = "dist-web"
+compatibility_date = "2024-11-01"
+
+[[r2_buckets]]
+binding = "MEDIA"
+bucket_name = "sniddy-media"

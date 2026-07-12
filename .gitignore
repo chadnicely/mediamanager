@@ -15,3 +15,7 @@ libraries.json
 
 # Caches / build artifacts
 thumb-cache/
+
+# PWA build output (regenerated) + local tooling
+dist-web/
+.claude/
