@@ -311,6 +311,7 @@ function createWindow() {
     closable: true,
     autoHideMenuBar: true,
     title: 'Sniddy',
+    icon: join(__dirname, '../../build/icon.ico'),
     backgroundColor: '#ffffff',
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),

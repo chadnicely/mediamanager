@@ -31,7 +31,7 @@ export default function MobileHome({
     <div className="m-home">
       <header className="m-home-bar">
         <div className="m-home-brand">
-          <span className="m-home-logo">S</span>
+          <img className="m-home-logo" src="./icon-192.png" alt="Sniddy" />
           <span className="m-home-word">sniddy</span>
         </div>
         <button className="m-home-me" onClick={onOpenSearch} aria-label="Search">
