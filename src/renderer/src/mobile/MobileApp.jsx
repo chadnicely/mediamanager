@@ -14,6 +14,8 @@ import MobileNotes from './MobileNotes.jsx'
 import MobileNotebooks from './MobileNotebooks.jsx'
 import MobileEditor from './MobileEditor.jsx'
 import MobileMore from './MobileMore.jsx'
+import MobileAuth from './MobileAuth.jsx'
+import { logout } from '../lib/auth.js'
 import MobileSearch from './MobileSearch.jsx'
 import MobileNoteSheet from './MobileNoteSheet.jsx'
 import MobileMedia from './MobileMedia.jsx'
@@ -33,9 +35,17 @@ function escapeHtml(s) {
   })[c])
 }
 
-export default function MobileApp({ user, onSignOut }) {
+export default function MobileApp({ user: initialUser, onSignOut }) {
   const store = useNotesStore()
+  const [user, setUser] = useState(initialUser)
+  const [authOpen, setAuthOpen] = useState(false)
   const [tab, setTab] = useState('create') // create | notes | notebooks | more
+
+  function doSignOut() {
+    logout()
+    setUser(null)
+    onSignOut?.()
+  }
   const [scope, setScope] = useState('all') // which notebook the Notes list shows
   const [activeNoteId, setActiveNoteId] = useState(null)
   const [searchOpen, setSearchOpen] = useState(false)
@@ -234,7 +244,18 @@ export default function MobileApp({ user, onSignOut }) {
           notebooksCount={store.notebooks.length}
           onImport={() => enexInputRef.current?.click()}
           onOpenMedia={setMediaArea}
-          onSignOut={onSignOut}
+          onSignIn={() => setAuthOpen(true)}
+          onSignOut={user ? doSignOut : null}
+        />
+      )}
+
+      {authOpen && (
+        <MobileAuth
+          onAuthed={(u) => {
+            setUser(u)
+            setAuthOpen(false)
+          }}
+          onClose={() => setAuthOpen(false)}
         />
       )}
 

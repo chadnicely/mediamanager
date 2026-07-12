@@ -7,6 +7,7 @@ export default function MobileMore({
   notebooksCount,
   onImport,
   onOpenMedia,
+  onSignIn,
   onSignOut
 }) {
   const email = user?.email || ''
@@ -54,12 +55,19 @@ export default function MobileMore({
 
       <div className="m-list-divider">Account</div>
       <div className="m-list">
+        {!user && onSignIn && (
+          <button className="m-more-item m-more-signin" onClick={onSignIn}>
+            <SignInIcon />
+            <span>Sign in / Create account</span>
+            <Chevron />
+          </button>
+        )}
         <button className="m-more-item" onClick={onImport}>
           <ImportIcon />
           <span>Import from Evernote (.enex)</span>
           <Chevron />
         </button>
-        {onSignOut && (
+        {user && onSignOut && (
           <button className="m-more-item danger" onClick={onSignOut}>
             <SignOutIcon />
             <span>Sign out</span>
@@ -96,6 +104,14 @@ function SignOutIcon() {
     <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.7">
       <path d="M14 4H6a1 1 0 0 0-1 1v14a1 1 0 0 0 1 1h8" strokeLinecap="round" />
       <path d="M17 8l4 4-4 4M21 12H9" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  )
+}
+function SignInIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.7">
+      <path d="M10 4h8a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1h-8" strokeLinecap="round" />
+      <path d="M7 8l4 4-4 4M11 12H3" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   )
 }

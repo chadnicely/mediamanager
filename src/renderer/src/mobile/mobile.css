@@ -779,3 +779,108 @@
   z-index: 80;
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
 }
+
+/* ---------- Mobile sign-in ---------- */
+.m-auth {
+  position: fixed;
+  inset: 0;
+  z-index: 500;
+  background: #f5f6f8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 22px;
+}
+.m-auth-card {
+  width: 100%;
+  max-width: 380px;
+  background: #fff;
+  border-radius: 18px;
+  padding: 26px 22px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.m-auth-logo {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  background: linear-gradient(140deg, #6bc23a 0%, #2563eb 100%);
+  color: #fff;
+  display: grid;
+  place-items: center;
+  font-weight: 800;
+  font-size: 26px;
+  margin-bottom: 14px;
+}
+.m-auth-title {
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0 0 4px;
+  color: #12203a;
+}
+.m-auth-sub {
+  font-size: 13.5px;
+  color: #6b7178;
+  margin: 0 0 20px;
+  text-align: center;
+}
+.m-auth-form {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.m-auth-form input {
+  width: 100%;
+  padding: 13px 14px;
+  border: 1px solid #e3e5e8;
+  border-radius: 11px;
+  font-size: 16px;
+  outline: none;
+  background: #fbfbfc;
+}
+.m-auth-form input:focus {
+  border-color: #2563eb;
+  background: #fff;
+}
+.m-auth-err {
+  font-size: 13px;
+  color: #e5484d;
+  padding: 2px 2px;
+}
+.m-auth-submit {
+  margin-top: 4px;
+  padding: 14px;
+  border: none;
+  border-radius: 11px;
+  background: linear-gradient(140deg, #6bc23a 0%, #2563eb 100%);
+  color: #fff;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.m-auth-submit:disabled {
+  opacity: 0.6;
+}
+.m-auth-switch {
+  margin-top: 16px;
+  background: none;
+  border: none;
+  color: #2563eb;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.m-auth-later {
+  margin-top: 6px;
+  background: none;
+  border: none;
+  color: #9aa0a6;
+  font-size: 13px;
+  cursor: pointer;
+}
+.m-more-signin span {
+  font-weight: 600;
+}

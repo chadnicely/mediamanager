@@ -5,21 +5,21 @@
 const TOKEN_KEY = 'jotter-token'
 const API_KEY = 'jotter-api-base'
 const DEFAULT_API = 'http://localhost:4500'
+// The hosted Sniddy backend (Vercel). Web/mobile talk to this so accounts and
+// sync work from any device.
+const LIVE_API = 'https://server-pacino-bots-projects.vercel.app'
 
 export function apiBase() {
-  // Electron desktop talks directly to the local API on :4500.
+  // Electron desktop talks to its local auto-started API on :4500 (same database).
   if (typeof window !== 'undefined' && window.api) return DEFAULT_API
-  // Web build: honor an explicitly saved base, otherwise use the SAME ORIGIN
-  // (empty base → requests go to "/api/…"). The web dev/host server proxies
-  // "/api" to the backend, so a phone loading this page over the LAN or a
-  // tunnel reaches the API through the very same URL — no localhost needed.
+  // Web/PWA: honor an explicitly saved base, otherwise the hosted server.
   try {
     const saved = localStorage.getItem(API_KEY)
     if (saved && saved.trim()) return saved.trim().replace(/\/+$/, '')
   } catch {
     /* ignore */
   }
-  return ''
+  return LIVE_API
 }
 export function setApiBase(url) {
   localStorage.setItem(API_KEY, url)
