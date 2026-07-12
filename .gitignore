@@ -19,3 +19,4 @@ thumb-cache/
 # PWA build output (regenerated) + local tooling
 dist-web/
 .claude/
+.vercel/
